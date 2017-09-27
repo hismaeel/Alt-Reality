@@ -1,17 +1,6 @@
 /*
- * Copyright 2014 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+                    Copyright 2014 The Android Open Source Project
+This app is built off go Google's Camera2Basic example, and hence utilizes the Camera2 API.
  */
 
 package com.example.android.camera2basic;
@@ -81,10 +70,17 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import static android.R.attr.rotation;
+
+
+/*
+Main Class that creates preview Session and does most of the image processing by calling the Renderscript code in OnBufferAvailable().
+No preview processing is done directly inside Camera Callbacks. Hence, have removed the Imagereader
+ */
 
 public class Camera2BasicFragment extends Fragment
         implements View.OnClickListener, FragmentCompat.OnRequestPermissionsResultCallback {
@@ -95,6 +91,8 @@ public class Camera2BasicFragment extends Fragment
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
     private static final int REQUEST_CAMERA_PERMISSION = 1;
     private static final String FRAGMENT_DIALOG = "dialog";
+
+
 
     static {
         ORIENTATIONS.append(Surface.ROTATION_0, 90);
@@ -177,6 +175,8 @@ public class Camera2BasicFragment extends Fragment
 
     };
 
+
+
     /**
      * ID of the current {@link CameraDevice}.
      */
@@ -222,7 +222,12 @@ public class Camera2BasicFragment extends Fragment
 
     private int click = 0;
 
+
+    /*
+    This method creates the necessary Renderscript Allocations.
+     */
     private void create() {
+
         rs = RenderScript.create(getActivity().getApplicationContext());
 
         yuvToRgbIntrinsic = ScriptIntrinsicYuvToRGB.create(rs, Element.U8_4(rs));
@@ -246,24 +251,32 @@ public class Camera2BasicFragment extends Fragment
 
     }
 
+    private void destroyStuff(){
+        mOut.destroy();
+        mScript.destroy();
+        yuvToRgbIntrinsic.destroy();
+        rs.destroy();
+        mAllocation.destroy();
+    }
+
 
     private final Allocation.OnBufferAvailableListener mOnBufferAvailableListener = new Allocation.OnBufferAvailableListener() {
 
         @Override
         public void onBufferAvailable(Allocation allocation) {
 
-            Log.d("orientation", Integer.toString(mPreviewSize.getHeight()));
-
-           Log.d("rotation", Integer.toString(mPreviewSize.getWidth()));
-
-
-
+            //debugging
+            Log.d("preveiw Height", Integer.toString(mPreviewSize.getHeight()));
+            Log.d("preview width", Integer.toString(mPreviewSize.getWidth()));
             Log.d("stuff", Integer.toString(rotatedPreviewWidth) + " " + Integer.toString(rotatedPreviewHeight) + " " + Integer.toString(maxPreviewHeight) + " " + Integer.toString(maxPreviewWidth));
+
+
+            //for each buffer we have to set the nessary element that we pass to the kernel mScript.
             mScript.set_i(click);
-            mReceive.ioReceive();
-            yuvToRgbIntrinsic.forEach(mAllocation);
-            mScript.forEach_convertP(mAllocation, mOut);
-            mOut.ioSend();
+            mReceive.ioReceive(); //"receives preview. Has to be a preview target to do so
+            yuvToRgbIntrinsic.forEach(mAllocation); //converts the YUV buffers to RGBA,
+            mScript.forEach_convertP(mAllocation, mOut);//now that YUV has been converted, we move on to do the color swaps/processing in the mappring kernel, found in convert.rs
+            mOut.ioSend(); //send the processed buffers back to stream
 
         }
     };
@@ -312,19 +325,14 @@ public class Camera2BasicFragment extends Fragment
      */
     private Handler mBackgroundHandler;
 
-    /**
-     * An {@link ImageReader} that handles still image capture.
-*/
+
 
     /**
      * This is the output file for our picture.
      */
     private File mFile;
 
-    /**
-     * This a callback object for the {@link ImageReader}. "onImageAvailable" will be called when a
-     * still image is ready to be saved.
-     */
+
 
     /**
      * {@link CaptureRequest.Builder} for the camera preview
@@ -622,13 +630,15 @@ public class Camera2BasicFragment extends Fragment
 //                WindowManager m = (WindowManager) activity.getSystemService(Context.WINDOW_SERVICE);
 //                m.getDefaultDisplay().getMetrics(metrics2);
 
-
+                //use DisplayMetrics to get default display sizes
                 DisplayMetrics displayMetrics = new DisplayMetrics();
                 activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
                 rotatedPreviewWidth = displayMetrics.widthPixels;
                 rotatedPreviewHeight = displayMetrics.heightPixels;
-                maxPreviewWidth = mTextureView.getWidth();
-                maxPreviewHeight = mTextureView.getHeight();
+                maxPreviewWidth = mTextureView.getWidth()*2;
+                maxPreviewHeight = mTextureView.getHeight()*2;
+
+
 
                 if (swappedDimensions) {
                     rotatedPreviewWidth = height;
@@ -637,24 +647,26 @@ public class Camera2BasicFragment extends Fragment
                     maxPreviewHeight = displayMetrics.widthPixels;
                 }
 
-                if (maxPreviewWidth > MAX_PREVIEW_WIDTH) {
-                    maxPreviewWidth = MAX_PREVIEW_WIDTH;
-                }
+                //Although Camera2Basic says 1920x1080 is max supported, I ave been able to get  higher resolution with no problems, yet!
 
-                if (maxPreviewHeight > MAX_PREVIEW_HEIGHT) {
-                    maxPreviewHeight = MAX_PREVIEW_HEIGHT;
-                }
+//                if (maxPreviewWidth > MAX_PREVIEW_WIDTH) {
+//                    maxPreviewWidth = MAX_PREVIEW_WIDTH;
+//                }
+//
+//                if (maxPreviewHeight > MAX_PREVIEW_HEIGHT) {
+//                    maxPreviewHeight = MAX_PREVIEW_HEIGHT;
+//                }
 
-                // Danger, W.R.! Attempting to use too large a preview size could  exceed the camera
-                // bus' bandwidth limitation, resulting in gorgeous previews but the storage of
-                // garbage capture data.
+                // Use Allocation.class to get available sizes
                 mPreviewSize = chooseOptimalSize(map.getOutputSizes(Allocation.class),
-                        rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth*2,
-                        maxPreviewHeight*2, largest);
+                        rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth,
+                        maxPreviewHeight, largest);
 
-                // We fit the aspect ratio of TextureView to the size of preview we picked.
-                int orientation = getResources().getConfiguration().orientation;
-                    mTextureView.setAspectRatio(
+                //fit the aspect ratio of TextureView to the size of preview we picked.
+//                int orientation = getResources().getConfiguration().orientation;
+
+                //HApp doesn't go into landscape. Have set the Aspect ratio to occupy full display screen.
+                            mTextureView.setAspectRatio(
                             mTextureView.getWidth(), mTextureView.getHeight());
 
 
@@ -685,7 +697,7 @@ public class Camera2BasicFragment extends Fragment
             return;
         }
         setUpCameraOutputs(width, height);
-        create();
+        create(); //Have to call this after setting up respective outputs such as preview Sizes
         configureTransform(width, height);
         Activity activity = getActivity();
         CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
@@ -710,6 +722,7 @@ public class Camera2BasicFragment extends Fragment
             if (null != mCaptureSession) {
                 mCaptureSession.close();
                 mCaptureSession = null;
+                destroyStuff();
             }
             if (null != mCameraDevice) {
                 mCameraDevice.close();
@@ -759,7 +772,7 @@ public class Camera2BasicFragment extends Fragment
             // This is the output Surface we need to start preview.
             Surface surface = new Surface(texture);
 
-            mOut.setSurface(surface);
+            mOut.setSurface(surface); //Output Allocataion has to have a surface attatched to it
 
             // We set up a CaptureRequest.Builder with the output Surface.
             mPreviewRequestBuilder
