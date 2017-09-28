@@ -1,4 +1,2 @@
-Based on Camera2 api by google, this app uses renderscript to convert yuv to rgb, then swap color elements, pack color again
-and send frames back to buffer.
-Motivated by strong desire to look at nature in different colors.
-Result of all this? Trees and grass now look purple/blue/red(depending on settings chosen) right in preview (almost 25 fps)
+Why are trees and grass green? Based on Google's Camera2Basic example, this app uses power of renderscript to receive buffers, convert individual pixels from YUV to RGBA, extract the colors from pixels, swap them, repack colors and send processed buffers to preview Stream.
+Result? Observe nature in purple, blue, or red! (depending on settings chosen)Do so right in smooth camera preview (above 25fps)
