@@ -8,7 +8,6 @@ Using a java only solution required getting images from ImageReader, lopping ove
 4: the kernel also saturates the final pixels by mixing their respective greyscales with their colors. THe amount of mixing is set by the constant "saturationLevel" (greater than 1.0f saturates the final pixels"<br />
 5 After this another intrinsic script is called, ScriptIntrinsicConvolve3x3. This sharpes the images by multiplying a 3x3 chuk of pixels with the convolution matrix.<br />
 6 Finally, the final receiveing allocation sends it's surface (on which the ixels are 'drawn') back to the preview stream<br />
-To my surprise, all this happens very swiftly.
 ![Alt text](/screenshots/6.png?raw=true "Optional Title")
 ![Alt text](/screenshots/7.png?raw=true "Optional Title")
 ![Alt text](/screenshots/8.png?raw=true "Optional Title")
@@ -18,7 +17,7 @@ To my surprise, all this happens very swiftly.
 ![Alt text](/screenshots/13.png?raw=true "Optional Title")
 ![Alt text](/screenshots/9.png?raw=true "Optional Title")
 <br />
-Red-Green swap could use some berrte color correction to red. Or I should upgrade my cam :-)
+Red-Green swap could use some better color correction to red. Or I should upgrade my cam :-)
 
 
 -Author ownership; This project is protected from code reuse. The author does not allow use of this code without prior approval-
