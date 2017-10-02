@@ -1,4 +1,4 @@
-#Sun Sep 24 09:44:26 COT 2017
+#Sat Sep 30 10:55:33 COT 2017
 base.0=C\:\\Users\\User\\Desktop\\nature\\Application\\build\\intermediates\\transforms\\dex\\debug\\folders\\1000\\10000\\instant-run_4f4026686b8f0b4023a76a5815339f41f32e5b56
 renamed.1=classes2.dex
 renamed.0=classes.dex

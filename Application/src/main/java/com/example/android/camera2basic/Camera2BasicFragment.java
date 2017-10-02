@@ -42,6 +42,7 @@ import android.os.HandlerThread;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
+import android.renderscript.ScriptIntrinsicConvolve3x3;
 import android.renderscript.ScriptIntrinsicYuvToRGB;
 import android.renderscript.Type;
 import android.support.annotation.NonNull;
@@ -215,6 +216,10 @@ public class Camera2BasicFragment extends Fragment
 
     private Allocation mOut;
 
+    private  ScriptIntrinsicConvolve3x3 convolution;
+    private Allocation mOutFinal;
+
+    private float[] convolutionMatrix = {0.0f, -1.0f, 0.0f, -1.0f, 5.0f, -1.0f, 0.0f, -1.0f, 0.0f};
     private Allocation mAllocation;
 
 
@@ -238,7 +243,8 @@ public class Camera2BasicFragment extends Fragment
 
         Type.Builder rgbType = new Type.Builder(rs, Element.RGBA_8888(rs)).setX(mPreviewSize.getWidth()).setY(mPreviewSize.getHeight());
 
-        mOut = Allocation.createTyped(rs, rgbType.create(), Allocation.USAGE_IO_OUTPUT | Allocation.USAGE_SCRIPT);
+        mOut = Allocation.createTyped(rs, rgbType.create(), Allocation.USAGE_SCRIPT);
+        mOutFinal = Allocation.createTyped(rs, rgbType.create(), Allocation.USAGE_IO_OUTPUT | Allocation.USAGE_SCRIPT);
 
         mScript = new ScriptC_covnert(rs);
 
@@ -247,6 +253,8 @@ public class Camera2BasicFragment extends Fragment
         yuvToRgbIntrinsic.setInput(mReceive);
         mReceive.setOnBufferAvailableListener(mOnBufferAvailableListener);
 
+        convolution
+                = ScriptIntrinsicConvolve3x3.create(rs, Element.U8_4(rs));
 
 
     }
@@ -276,7 +284,10 @@ public class Camera2BasicFragment extends Fragment
             mReceive.ioReceive(); //"receives preview. Has to be a preview target to do so
             yuvToRgbIntrinsic.forEach(mAllocation); //converts the YUV buffers to RGBA,
             mScript.forEach_convertP(mAllocation, mOut);//now that YUV has been converted, we move on to do the color swaps/processing in the mappring kernel, found in convert.rs
-            mOut.ioSend(); //send the processed buffers back to stream
+            convolution.setInput(mOut);
+            convolution.setCoefficients(convolutionMatrix);
+            convolution.forEach(mOutFinal);
+            mOutFinal.ioSend(); //send the processed buffers back to stream
 
         }
     };
@@ -772,7 +783,7 @@ public class Camera2BasicFragment extends Fragment
             // This is the output Surface we need to start preview.
             Surface surface = new Surface(texture);
 
-            mOut.setSurface(surface); //Output Allocataion has to have a surface attatched to it
+            mOutFinal.setSurface(surface); //Output Allocataion has to have a surface attatched to it
 
             // We set up a CaptureRequest.Builder with the output Surface.
             mPreviewRequestBuilder
@@ -916,7 +927,7 @@ public class Camera2BasicFragment extends Fragment
             // This is the CaptureRequest.Builder that we use to take a picture.
             final CaptureRequest.Builder captureBuilder =
                     mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
-            captureBuilder.addTarget(mOut.getSurface());
+            captureBuilder.addTarget(mOutFinal.getSurface());
 
             // Use the same AE and AF modes as the preview.
             captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,

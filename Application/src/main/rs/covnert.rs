@@ -7,6 +7,8 @@
 // and finally repacks and returns so that the final pixel can be placed into respective position in the output allocation
 
 int i; //used as indicator for button clicks
+const static float3 gMonoMult = {0.299f, 0.587f, 0.114f}; //The three multipliers convert RGB to white/black
+float saturationValue = 1.3f; //control amount of saturation change we'd like
 
 uchar4 __attribute__((kernel)) convertP(uchar4 pixel, uint32_t x, uint32_t y)
 {
@@ -21,7 +23,9 @@ uchar4 __attribute__((kernel)) convertP(uchar4 pixel, uint32_t x, uint32_t y)
 
 
     float4 color = rsUnpackColor8888(pixel);
-    uchar4 pixelPP;
+    uchar4 pixelPP = pixel;
+    float3 pixelP;
+
 
     float r = color.r;
     float g = color.g;
@@ -46,9 +50,9 @@ uchar4 __attribute__((kernel)) convertP(uchar4 pixel, uint32_t x, uint32_t y)
     pixelPP = rsPackColorTo8888(g,r*0.7,b,a);
     }
 
-    if (i == 0){
-    pixelPP = pixel;
-    }
+        float4 pixelPPP = rsUnpackColor8888(pixelPP);
+        pixelP = dot(pixelPPP.rgb, gMonoMult);
+        pixelP = mix(pixelP, pixelPPP.rgb, saturationValue);
 
-    return pixelPP;
+    return rsPackColorTo8888(pixelP) ;
 }

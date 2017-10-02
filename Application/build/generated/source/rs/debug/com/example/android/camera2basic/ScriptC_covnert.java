@@ -36,11 +36,15 @@ public class ScriptC_covnert extends ScriptC {
               covnertBitCode.getBitCode32(),
               covnertBitCode.getBitCode64());
         __I32 = Element.I32(rs);
+        mExportVar_saturationValue = 1.29999995f;
+        __F32 = Element.F32(rs);
         __U8_4 = Element.U8_4(rs);
     }
 
+    private Element __F32;
     private Element __I32;
     private Element __U8_4;
+    private FieldPacker __rs_fp_F32;
     private FieldPacker __rs_fp_I32;
     private final static int mExportVarIdx_i = 0;
     private int mExportVar_i;
@@ -55,6 +59,21 @@ public class ScriptC_covnert extends ScriptC {
 
     public Script.FieldID getFieldID_i() {
         return createFieldID(mExportVarIdx_i, null);
+    }
+
+    private final static int mExportVarIdx_saturationValue = 1;
+    private float mExportVar_saturationValue;
+    public synchronized void set_saturationValue(float v) {
+        setVar(mExportVarIdx_saturationValue, v);
+        mExportVar_saturationValue = v;
+    }
+
+    public float get_saturationValue() {
+        return mExportVar_saturationValue;
+    }
+
+    public Script.FieldID getFieldID_saturationValue() {
+        return createFieldID(mExportVarIdx_saturationValue, null);
     }
 
     //private final static int mExportForEachIdx_root = 0;
