@@ -14,10 +14,15 @@ Using a java only solution required getting images from ImageReader, lopping ove
 ![Alt text](/screenshots/12.png?raw=true "Optional Title")
 ![Alt text](/screenshots/11.png?raw=true "Optional Title")
 ![Alt text](/screenshots/14.png?raw=true "Optional Title")
+<br />
+<br />
+Red-Green swap could use some better color correction to red. Or I should upgrade my cam :-)
+<br />
+<br />
 ![Alt text](/screenshots/13.png?raw=true "Optional Title")
 ![Alt text](/screenshots/9.png?raw=true "Optional Title")
 <br />
-Red-Green swap could use some better color correction to red. Or I should upgrade my cam :-)
+
 
 
 -Author ownership; This project is protected from code reuse. The author does not allow use of this code without prior approval-
