@@ -1,7 +1,7 @@
 -Copyright 2014 The Android Open Source Project-
 
 Why are trees and grass green? Based on Google's Camera2Basic example, this app uses power of renderscript to swap colors (RGB) right inside preveiw, maintaing smooth framerates (above 25fps). Result? Observe nature in light-blue,purple, blue, or red!
-Using a java only solution required getting images from ImageReader, lopping over pixels, doing the yuv to rgb math, swapping colors, and displaying the resulting pixels on a bitmap, which is then passed back to stream. This proved to be very slow (about 2 frames a second!) Renderscript though has been amazing, even color corrections have been possible (multiplying final colors by color-matrix, convolution (sharpening), and increasing saturation). To sum up, this is what's happening: <br />
+Using a java only solution required getting images from ImageReader, lopping over pixels, doing the yuv to rgb math, swapping colors, and displaying the resulting pixels on a bitmap, which is then passed back to stream. This proved to be very slow (about 2 frames a second!) Renderscript though has been amazing, even color corrections have been possible (multiplying final colors by color-matrix, convolution (sharpening), and increasing saturation). <br />
 1: An input Allocation receives buffers from stream<br />
 2: after allocation is populated, the necessary yuv to rgb conversion is done by a ScriptIntrinsicyuvTorgb (ScriptIntrinsics are essentially pre-built mapping kernels) <br />
 3: then the custom kernel "convert" is called. This does the chunck of work. It unpacks the rgb colors to float4. After checking for clicks, it swaps the color elements respectively.  <br />
