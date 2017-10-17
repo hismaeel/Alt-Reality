@@ -1,4 +1,3 @@
--Copyright 2014 The Android Open Source Project-
 
 Why are trees and grass green? Based on Google's Camera2Basic example, this app uses power of renderscript to swap colors (RGB) right inside preveiw, maintaing smooth framerates (above 25fps). Result? Observe nature in light-blue,purple, blue, or red!
 Using a java only solution required getting images from ImageReader, lopping over pixels, doing the yuv to rgb math, swapping colors, and displaying the resulting pixels on a bitmap, which is then passed back to stream. This proved to be very slow (about 2 frames a second!) Renderscript though has been amazing, even color corrections have been possible (multiplying final colors by color-matrix, convolution (sharpening), and increasing saturation).
@@ -23,5 +22,14 @@ Red-Green swap could use some better color correction to red. Or I should upgrad
 <br />
 ![Alt text](/screenshots/14.png?raw=true "Optional Title")
 ![Alt text](/screenshots/13.png?raw=true "Optional Title")
+
+
+
+-------------------------------------------------UPDATEs OCTOBER--------------------------------------------------------------
+RenderScript provides a built in mapping kernel for color multiplications. Using ScriptIntrinsicColorMatrix, we can make a 4x4 matrix and multiply color vectors with it. Putting Linear Algebra to good use, we can easily swap color vectors and do color correction. For instance, a 4x4 Identity matrix will keep a color vector unchanged. But say the matrix {{0,1,0,0} {1,0,0,0} {0,0,1,0} {0,0,0,1}} will swap R and G values! 
+Hence don't need to make calls to the custom kernel convert(). Frame Rates should be even better now
+
+
+
 
 -Author ownership; This project is protected from code reuse. The author does not allow use of this code without prior approval-
