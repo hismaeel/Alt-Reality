@@ -41,7 +41,9 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
+import android.renderscript.Matrix4f;
 import android.renderscript.RenderScript;
+import android.renderscript.ScriptIntrinsicColorMatrix;
 import android.renderscript.ScriptIntrinsicConvolve3x3;
 import android.renderscript.ScriptIntrinsicYuvToRGB;
 import android.renderscript.Type;
@@ -214,18 +216,87 @@ public class Camera2BasicFragment extends Fragment
 
     private boolean swappedDimensions;
 
+    private ScriptIntrinsicColorMatrix matrix;
+
     private Allocation mOut;
 
     private  ScriptIntrinsicConvolve3x3 convolution;
+
+
     private Allocation mOutFinal;
 
-    private float[] convolutionMatrix = {0.0f, -1.0f, 0.0f, -1.0f, 5.0f, -1.0f, 0.0f, -1.0f, 0.0f};
     private Allocation mAllocation;
 
 
     private ScriptIntrinsicYuvToRGB yuvToRgbIntrinsic;
 
     private int click = 0;
+
+
+
+    private Matrix4f matrixWR = new Matrix4f(new float[] {
+            0.8f, 0f, 0f, 0f,
+            0f, 0.2f, 0f, 0f,
+            0f, 0f,0.2f, 0f,
+            0f, 0f, 0f, 1f
+    } );
+
+    //Fix this
+    private Matrix4f matrixRG =  new Matrix4f(new float[]{
+            0f, 1f, 0f, 0f,
+            1.3f, -0.2f, 0f, 0f,
+            0f, 0f, 1f, 0f,
+            0f, 0f, 0f, 1f
+    });
+
+    //ShowCase
+    private Matrix4f SmatrixRG =  new Matrix4f(new float[]{
+            0f, 1f, 0f, 0f,
+            1f, 0f, 0f, 0f,
+            0f, 0f, 1f, 0f,
+            0f, 0f, 0f, 1f
+    });
+
+
+    //Show Case
+    private Matrix4f SmatrixRB =  new Matrix4f(new float[]{
+            0f, 0f, 1f, 0f,
+            0f, 1f, 0f, 0f,
+            1f, 0f, 0f, 0f,
+            0f, 0f, 0f, 1f
+    });
+
+
+
+    private Matrix4f matrixI =  new Matrix4f(new float[]{
+            1f, 0f, 0f, 0f,
+            0f, 1f, 0f, 0f,
+            0f, 0f, 1f, 0f,
+            0f, 0f, 0f, 1f
+    });
+
+
+
+    //Showcase. USe this for GB showcase
+    private Matrix4f SmatrixBG =  new Matrix4f(new float[]{
+            1f, 0f, 0f, 0f,
+            0f, 0f, 1f, 0f,
+            0f, 1f, 0f, 0f,
+            0f, 0f, 0f, 1f
+    });
+
+
+
+
+
+
+    //Fix this
+    private Matrix4f matrixBG =  new Matrix4f(new float[]{
+            0.4f, 0f, 0f, 0f,
+            0.3f, 0f, 1.2f, 0f,
+            0f, 1.2f, 0f, 0f,
+            0f, 0f, 0f, 1f
+    });
 
 
     /*
@@ -247,6 +318,11 @@ public class Camera2BasicFragment extends Fragment
         mOutFinal = Allocation.createTyped(rs, rgbType.create(), Allocation.USAGE_IO_OUTPUT | Allocation.USAGE_SCRIPT);
 
         mScript = new ScriptC_covnert(rs);
+
+        matrix = ScriptIntrinsicColorMatrix.create(rs);
+
+
+
 
         mAllocation = Allocation.createTyped(rs, rgbType.create(), Allocation.USAGE_SCRIPT);
 
@@ -279,14 +355,37 @@ public class Camera2BasicFragment extends Fragment
             Log.d("stuff", Integer.toString(rotatedPreviewWidth) + " " + Integer.toString(rotatedPreviewHeight) + " " + Integer.toString(maxPreviewHeight) + " " + Integer.toString(maxPreviewWidth));
 
 
-            //for each buffer we have to set the nessary element that we pass to the kernel mScript.
-            mScript.set_i(click);
+            //for each buffer we have to set the necessary element that we pass to the kernel mScript.
+
+
+
             mReceive.ioReceive(); //"receives preview. Has to be a preview target to do so
-            yuvToRgbIntrinsic.forEach(mAllocation); //converts the YUV buffers to RGBA,
-            mScript.forEach_convertP(mAllocation, mOut);//now that YUV has been converted, we move on to do the color swaps/processing in the mappring kernel, found in convert.rs
-            convolution.setInput(mOut);
-            convolution.setCoefficients(convolutionMatrix);
-            convolution.forEach(mOutFinal);
+            //mScript.set_i(click);
+
+            if (click == 1){
+                matrix.setColorMatrix(SmatrixRG);
+            }
+            if ( click == 2){
+                matrix.setColorMatrix(SmatrixBG);
+            }
+
+            if ( click == 3) {
+                matrix.setColorMatrix(SmatrixRB);
+            }
+
+            if (click == 4) {
+                matrix.setColorMatrix(matrixBG);
+            }
+//
+            if (click == 0) {
+                matrix.setColorMatrix(matrixI);
+            }
+
+
+
+           yuvToRgbIntrinsic.forEach(mAllocation); //converts the YUV buffers to RGBA,
+             //mScript.forEach_convertP(mAllocation, mOutFinal);//now that YUV has been converted, we move on to do the color swaps/processing in the mappring kernel, found in convert.rs
+            matrix.forEach(mAllocation, mOutFinal);
             mOutFinal.ioSend(); //send the processed buffers back to stream
 
         }
