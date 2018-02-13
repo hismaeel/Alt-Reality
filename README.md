@@ -13,7 +13,6 @@ RenderScript provides a built in mapping kernel for color multiplications. Using
 <br />
 ![Alt text](/screenshots/6.png?raw=true "Optional Title")
 ![Alt text](/screenshots/7.png?raw=true "Optional Title")
-![Alt text](/screenshots/8.png?raw=true "Optional Title")
 ![Alt text](/screenshots/12.png?raw=true "Optional Title")
 ![Alt text](/screenshots/11.png?raw=true "Optional Title")
 <br />
